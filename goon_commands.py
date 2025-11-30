@@ -50,8 +50,8 @@ def setup_goon_commands(bot: commands.Bot, data: dict):
                 f"⏳ **Cooldown!** Try again in **{mins}m {secs}s**."
             )
 
-        # 3) Sickness mechanic (10% chance)
-        if random.random() < 0.10:
+        # 3) Sickness mechanic (3% chance)
+        if random.random() < 0.03:
             sick_time = 3600  # 1 hour
             data[user]["sick_until"] = now + sick_time
 
