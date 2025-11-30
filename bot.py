@@ -5,7 +5,7 @@ load_dotenv()
 import discord
 from discord.ext import commands
 
-from config import TOKEN, CHANNEL_ID, UPDATE_MESSAGE_25
+from config import TOKEN, CHANNEL_ID, UPDATE_MESSAGE_30
 from data_manager import load_data, ensure_jar, save_data
 
 from goon_commands import setup_goon_commands
@@ -53,25 +53,22 @@ async def on_ready():
     try:
         channel = bot.get_channel(CHANNEL_ID)
         if channel:
-            await channel.send(embed=UPDATE_MESSAGE_25)
-            print("Sent Update 2.5 announcement.")
+            await channel.send(embed=UPDATE_MESSAGE_30)
+            print("Sent Update 3.0 announcement.")
     except Exception as e:
         print("Failed to send update message:", e)
 
     # Start daily quote scheduler
     setup_daily_scheduler(bot)
 
-    # Start automatic cockfight scheduler
+    from cock_fight import setup_cock_fight as cf
+
     try:
-        # Imported through setup function: setup_cock_fight.auto_cockfight
-        from cock_fight import setup_cock_fight as cf
-        cf.auto_cockfight.start()
-        print("Auto cockfight scheduler started.")
+        cf.generate_daily_cock_times.start()
+        cf.monitor_cock_times.start()
+        print("Cockfight schedulers started.")
     except RuntimeError:
-        # Happens on reload — safe to ignore
         pass
-    except Exception as e:
-        print("Failed to start auto_cockfight:", e)
 
     try:    
         from john_pork import setup_john_pork as jp

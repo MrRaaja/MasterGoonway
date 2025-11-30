@@ -157,6 +157,7 @@ def setup_other_commands(bot: commands.Bot, data: dict):
             "`!quote` — Random goon quote\n"
             "`!nextquote` — Time until next daily quote\n"
             "`!helpme` — This help message\n"
+            "`!cocktime` — Show all cock fight times"
         )
         await ctx.send(msg)
 

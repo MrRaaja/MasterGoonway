@@ -3,6 +3,7 @@
 import time
 import asyncio
 import random
+import datetime
 
 import discord
 from discord.ext import commands, tasks
@@ -11,10 +12,12 @@ from discord import AllowedMentions
 from data_manager import ensure_user, save_data
 from config import ACHIEVEMENTS, CHANNEL_ID
 
-# Only YOU can start manually
 OWNER_ID = "475968988002779156"
 
-# Shared global state
+# Global daily fight schedule
+scheduled_fight_times = []
+
+# Duel global state
 cock_state = {
     "active": False,
     "players": [],
@@ -26,15 +29,13 @@ cock_state = {
     "loop_running": False
 }
 
-# ============================================================
-# Main Setup Entry
-# ============================================================
+
 def setup_cock_fight(bot: commands.Bot, data: dict):
 
-    # ============================================================
-    # Status animation
-    # ============================================================
-    async def render_status() -> str:
+    # ------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------
+    async def render_status():
         if len(cock_state["players"]) < 2:
             return "Waiting for two brave fighters..."
 
@@ -45,7 +46,7 @@ def setup_cock_fight(bot: commands.Bot, data: dict):
         bar1 = "💦" * min(h1, 20)
         bar2 = "💦" * min(h2, 20)
 
-        remaining = max(0.0, cock_state["end_time"] - time.monotonic())
+        remaining = max(0, cock_state["end_time"] - time.monotonic())
 
         return (
             "💦 **COCK SMASHING BATTLE — LIVE 🍆**\n"
@@ -54,10 +55,8 @@ def setup_cock_fight(bot: commands.Bot, data: dict):
             f"⏳ Time left: **{remaining:.1f}s**"
         )
 
-    # ============================================================
-    # Duel Loop
-    # ============================================================
-    async def duel_loop(channel: discord.TextChannel):
+    # ------------------------------------------------------------
+    async def duel_loop(channel):
         cock_state["loop_running"] = True
         try:
             while cock_state["active"] and time.monotonic() < cock_state["end_time"]:
@@ -70,7 +69,6 @@ def setup_cock_fight(bot: commands.Bot, data: dict):
                         pass
                 await asyncio.sleep(0.3)
 
-            # Final update
             if cock_state["fight_message"]:
                 try:
                     await cock_state["fight_message"].edit(
@@ -80,36 +78,28 @@ def setup_cock_fight(bot: commands.Bot, data: dict):
                     pass
 
             await finish_duel(channel)
-
         finally:
             cock_state["loop_running"] = False
 
-    # ============================================================
-    # Finish Duel
-    # ============================================================
-    async def finish_duel(channel: discord.TextChannel):
+    # ------------------------------------------------------------
+    async def finish_duel(channel):
         if not cock_state["active"]:
             return
 
         cock_state["active"] = False
 
         if len(cock_state["players"]) < 2:
-            await channel.send("Duel ended — not enough fighters joined.")
-            return
+            return await channel.send("Duel ended — not enough fighters.")
 
         p1, p2 = cock_state["players"]
-        h1 = cock_state["hits"][p1]
-        h2 = cock_state["hits"][p2]
+        h1 = cock_state["hits"].get(p1, 0)
+        h2 = cock_state["hits"].get(p2, 0)
 
-        if h1 > h2:
-            winner = p1
-        elif h2 > h1:
-            winner = p2
-        else:
-            await channel.send("🤝 **Tie!** Both fighters smashed equally.")
-            return
+        if h1 == h2:
+            return await channel.send("🤝 **Tie!** Both fighters smashed equally.")
 
-        # XP + achievement
+        winner = p1 if h1 > h2 else p2
+
         ensure_user(data, winner)
         data[winner]["xp"] += 50
 
@@ -125,80 +115,55 @@ def setup_cock_fight(bot: commands.Bot, data: dict):
             f"🏅 Achievement: **{ACHIEVEMENTS['fastest_gooner_west']['name']}**"
         )
 
-    # ============================================================
-    # Ready Phase
-    # ============================================================
+    # ------------------------------------------------------------
     async def send_ready_prompt(channel):
-        ready_button = discord.ui.Button(
-            label="Ready",
-            style=discord.ButtonStyle.success
-        )
+        btn = discord.ui.Button(label="Ready", style=discord.ButtonStyle.success)
 
-        async def ready_callback(inter):
+        async def callback(inter):
             await inter.response.defer(ephemeral=True)
             uid = str(inter.user.id)
 
             if uid not in cock_state["players"]:
-                return await inter.followup.send(
-                    "You are not part of this duel.",
-                    ephemeral=True
-                )
+                return await inter.followup.send("You are not part of this duel.", ephemeral=True)
 
             cock_state["ready"].add(uid)
             await inter.followup.send("✅ Ready!", ephemeral=True)
 
             if len(cock_state["ready"]) == 2:
-                await channel.send("🔥💦 Both fighters ready! Starting in **3… 2… 1…**")
+                await channel.send("🔥💦 Both fighters ready! Starting in 3… 2… 1…")
                 await start_fight(channel)
 
-        ready_button.callback = ready_callback
+        btn.callback = callback
 
         view = discord.ui.View()
-        view.add_item(ready_button)
+        view.add_item(btn)
 
-        await channel.send(
-            "👊 Both fighters joined.\n"
-            "Click **Ready** to start.\n",
-            view=view
-        )
+        await channel.send("👊 Both fighters joined.\nClick Ready to start.", view=view)
 
-    # ============================================================
-    # Start Fight
-    # ============================================================
+    # ------------------------------------------------------------
     async def start_fight(channel):
-        hit_button = discord.ui.Button(
-            label="HIT!",
-            style=discord.ButtonStyle.danger
-        )
+        btn = discord.ui.Button(label="HIT!", style=discord.ButtonStyle.danger)
 
-        async def hit_callback(inter):
+        async def callback(inter):
             uid = str(inter.user.id)
-
             if uid not in cock_state["players"]:
-                return await inter.response.send_message(
-                    "You are not in this duel.",
-                    ephemeral=True
-                )
+                return await inter.response.send_message("You are not in this duel.", ephemeral=True)
 
             if time.monotonic() > cock_state["end_time"]:
-                return await inter.response.send_message(
-                    "Duel already ended.",
-                    ephemeral=True
-                )
+                return await inter.response.send_message("Duel ended.", ephemeral=True)
 
             cock_state["hits"][uid] += 1
             await inter.response.defer()
 
-        hit_button.callback = hit_callback
+        btn.callback = callback
 
         view = discord.ui.View()
-        view.add_item(hit_button)
+        view.add_item(btn)
 
         cock_state["end_time"] = time.monotonic() + 10
 
         msg = await channel.send(
-            "🔥 **COCK SMASHING BATTLE — LIVE 🐓💦**\n"
-            "Mash **HIT!** for **10 seconds**!",
+            "🔥 **COCK SMASHING BATTLE — LIVE 🐓💦**\nMash HIT! for 10 seconds!",
             view=view
         )
         cock_state["fight_message"] = msg
@@ -206,9 +171,7 @@ def setup_cock_fight(bot: commands.Bot, data: dict):
         if not cock_state["loop_running"]:
             bot.loop.create_task(duel_loop(channel))
 
-    # ============================================================
-    # Start Event (manual or automatic)
-    # ============================================================
+    # ------------------------------------------------------------
     async def start_cock_event(channel):
         global cock_state
 
@@ -226,112 +189,124 @@ def setup_cock_fight(bot: commands.Bot, data: dict):
             "loop_running": False
         }
 
-        join_button = discord.ui.Button(
-            label="Join Fight",
-            style=discord.ButtonStyle.primary
-        )
+        btn = discord.ui.Button(label="Join Fight", style=discord.ButtonStyle.primary)
 
-        async def join_callback(inter):
+        async def callback(inter):
             await inter.response.defer(ephemeral=True)
             uid = str(inter.user.id)
 
             if uid in cock_state["players"]:
-                return await inter.followup.send(
-                    "You already joined.",
-                    ephemeral=True
-                )
+                return await inter.followup.send("Already joined.", ephemeral=True)
 
             if len(cock_state["players"]) >= 2:
-                return await inter.followup.send(
-                    "Two fighters already joined.",
-                    ephemeral=True
-                )
+                return await inter.followup.send("Two fighters already joined.", ephemeral=True)
 
             cock_state["players"].append(uid)
             cock_state["hits"][uid] = 0
 
-            await inter.followup.send(
-                f"⚔️ {inter.user.name} entered the arena!",
-                ephemeral=True
-            )
+            await inter.followup.send(f"⚔️ {inter.user.name} entered the arena!", ephemeral=True)
 
             if len(cock_state["players"]) == 2:
                 await send_ready_prompt(channel)
 
-        join_button.callback = join_callback
+        btn.callback = callback
 
         view = discord.ui.View()
-        view.add_item(join_button)
+        view.add_item(btn)
 
         await channel.send(
-            "@everyone 🥵 **Beat The Cock – Two fighters needed!**\n"
-            "Press **Join Fight** to enter.",
+            "@everyone 🥵 **Beat The Cock – Two fighters needed!**\nPress Join Fight to enter.",
             view=view,
             allowed_mentions=AllowedMentions(everyone=True)
         )
 
-    # ============================================================
-    # Manual owner-only command
-    # ============================================================
+    # ------------------------------------------------------------
+    # Manual force start
+    # ------------------------------------------------------------
     @bot.command(name="cockfight")
     async def cockfight_cmd(ctx):
         if str(ctx.author.id) != OWNER_ID:
             return await ctx.send("⛔ Only the Master Goon may summon a Cock Battle.")
         await start_cock_event(ctx.channel)
 
-    # ============================================================
-    # Automatic 4× per day (every 6 hours)
-    # ============================================================
-    # ============================================================
-    # Automatic daily schedule – 4 battles per day
-    # ============================================================
-    @tasks.loop(time=datetime.time(hour=0, minute=0))
-    async def auto_cockfight():
-        channel = bot.get_channel(CHANNEL_ID)
-        if not channel:
-            return
+    # ------------------------------------------------------------
+    # Scheduling System v2
+    # ------------------------------------------------------------
+    def _generate_daily_times():
+        """Generate 4 random times today, excluding 02:00–08:00 UTC."""
+        times = []
 
-        # Pick 4 random times in the day (in minutes from 00:00)
-        # e.g. [87, 312, 790, 1218]
-        moments = sorted(random.randint(0, 24 * 60 - 1) for _ in range(4))
+        while len(times) < 4:
+            hour = random.randint(0, 23)
+            minute = random.randint(0, 59)
 
-        # Format them nicely as HH:MM
-        def fmt(mins: int) -> str:
-            h = mins // 60
-            m = mins % 60
-            return f"{h:02d}:{m:02d}"
-
-        times_str = "\n".join(f"- {fmt(m)}" for m in moments)
-
-        # Announce today’s schedule at 00:00
-        await channel.send(
-            "📅 **Today’s Cock Battle Schedule**\n"
-            "Four battles are planned for today:\n"
-            f"{times_str}\n\n"
-            "Stay edgy, gooners.",
-        )
-
-        # Now wait and spawn battles at those times
-        prev = 0
-        for minute_mark in moments:
-            delay_minutes = minute_mark - prev
-            prev = minute_mark
-
-            # Sleep until this battle time
-            await asyncio.sleep(delay_minutes * 60)
-
-            # Skip if something is already running
-            if cock_state["active"]:
+            # Skip forbidden window
+            if 2 <= hour < 8:
                 continue
 
-            await channel.send(
-                "@everyone 🍆 **A Wild Cock Battle Has Appeared!**\n"
-                "Who’s brave enough to smash first?",
-                allowed_mentions=AllowedMentions(everyone=True)
-            )
+            times.append(f"{hour:02d}:{minute:02d}")
 
-            await start_cock_event(channel)
+        return sorted(times)
 
 
-    # Make auto_cockfight accessible to bot.py
-    setup_cock_fight.auto_cockfight = auto_cockfight
+    async def _trigger_fight_if_due():
+        if not scheduled_fight_times:
+            return
+
+        now_utc = datetime.datetime.utcnow().strftime("%H:%M")
+
+        if now_utc in scheduled_fight_times:
+            scheduled_fight_times.remove(now_utc)
+
+            channel = bot.get_channel(CHANNEL_ID)
+            if channel:
+                await channel.send(
+                    "@everyone 🍆 **A Wild Cock Battle Has Appeared!**\n"
+                    "Who’s brave enough to smash first?",
+                    allowed_mentions=AllowedMentions(everyone=True)
+                )
+                await start_cock_event(channel)
+
+    @tasks.loop(time=datetime.time(hour=0, minute=0, tzinfo=datetime.timezone.utc))
+    async def generate_daily_cock_times():
+        global scheduled_fight_times
+        scheduled_fight_times = _generate_daily_times()
+
+        channel = bot.get_channel(CHANNEL_ID)
+        if channel:
+            msg = "📅 **Today's Cock Fight Times:**\n"
+            for t in scheduled_fight_times:
+                msg += f"• 🕒 {t} UTC\n"
+            await channel.send(msg)
+
+    @tasks.loop(minutes=1)
+    async def monitor_cock_times():
+        await _trigger_fight_if_due()
+
+    @bot.command(name="cocktimes")
+    async def cocktimes_cmd(ctx):
+        global scheduled_fight_times
+
+        # If the list is empty → generate new times for today
+        if not scheduled_fight_times:
+            scheduled_fight_times = _generate_daily_times()
+
+            msg = "📅 **Today's Cock Fight Times (Generated Now):**\n"
+            for t in scheduled_fight_times:
+                msg += f"• 🕒 {t} UTC\n"
+
+            return await ctx.send(msg)
+
+        # If list exists → show it
+        msg = "📅 **Today's Cock Fight Times:**\n"
+        for t in scheduled_fight_times:
+            msg += f"• 🕒 {t} UTC\n"
+
+        await ctx.send(msg)
+
+# ------------------------------------------------------------
+# EXPORT tasks to bot.py (do NOT start them here)
+# ------------------------------------------------------------
+
+    setup_cock_fight.generate_daily_cock_times = generate_daily_cock_times
+    setup_cock_fight.monitor_cock_times = monitor_cock_times

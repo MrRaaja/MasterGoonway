@@ -74,7 +74,7 @@ def setup_mysterious_chest(bot: commands.Bot, data: dict):
 
             # --- OPEN CAREFULLY ---
             if action == "open":
-                if random.random() < 0.7:  # GOOD
+                if random.random() < 0.5:  # GOOD
                     xp_gain = 120
                     result_text = (
                         "✨ You gently open the chest and discover **glowing loot**!\n"
@@ -83,11 +83,11 @@ def setup_mysterious_chest(bot: commands.Bot, data: dict):
                     achievement_unlocked = await award_achievement(uid, "chest_luck_blessed")
 
                 else:  # TRAP
-                    xp_gain = 20
-                    essence_delta = -2
+                    xp_gain = 10
+                    essence_delta = -5
                     result_text = (
                         "💥 A hidden trap explodes!\n"
-                        f"🎯 You gain **{xp_gain} XP**, but spill **2 ml** of {ESSENCE_NAME}."
+                        f"🎯 You gain **{xp_gain} XP**, but spill **5 ml** of {ESSENCE_NAME}."
                     )
                     achievement_unlocked = await award_achievement(uid, "chest_luck_cursed")
 
@@ -111,7 +111,7 @@ def setup_mysterious_chest(bot: commands.Bot, data: dict):
 
             # --- RUN AWAY ---
             elif action == "run":
-                xp_gain = 15
+                xp_gain = 5
                 result_text = (
                     "🏃‍♂️ You flee from the mysterious chest.\n"
                     f"🎯 You gain **{xp_gain} XP** for survival instincts."

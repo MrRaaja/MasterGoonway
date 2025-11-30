@@ -74,6 +74,17 @@ RARITY_COLORS = {
     "mythic": "🔴",
     "god": "✨"
 }
+# ========= RARITY PRIORITY ========= #
+# Higher number = rarer achievement
+RARITY_PRIORITY = {
+    "common": 1,
+    "uncommon": 2,
+    "rare": 3,
+    "epic": 4,
+    "legendary": 5,
+    "mythic": 6,
+    "god": 7
+}
 
 # ========= ACHIEVEMENTS ========= #
 # chance = 0 means "not random" (awarded by logic)
@@ -389,3 +400,77 @@ UPDATE_MESSAGE_25 = discord.Embed(
 )
 
 
+UPDATE_MESSAGE_30 = discord.Embed(
+    title="🌌 עדכון 3.0 — עידן ההרפתקאות",
+    description=(
+        "📜 **כך נאמר במגילת מסטאר גונוואיי:**\n"
+        "*\"מי שמוכן לפגוש את הבלתי־צפוי — מגלה שהיקום עצמו רוצה לשחק איתו.\"*\n\n"
+        "מאז פרק 2.5, העולם החל לרעוד: קולות מעבר לזמן, תיבות שמופיעות משום מקום, "
+        "וחזירים שמצלצלים באמצע הלילה. פרק 3.0 אינו רק עדכון — הוא פתיחת הדלת "
+        "ליקום חי, אינטראקטיבי ותזזיתי.\n\n"
+        "✨ **זהו עידן ההרפתקאות.**"
+    ),
+    color=discord.Color.purple()
+)
+
+UPDATE_MESSAGE_30.add_field(
+    name="👽 Alien Abduction — חטיפת חייזרים",
+    value=(
+        "• 0.7% סיכוי להיחטף באמצע הגון\n"
+        "• 7 דקות של בלבול קוסמי\n"
+        "• 50% לקבלת 'טכניקת על' (בוסט XP)\n"
+        "• הישג חדש: **Abducted Mid-Edge**\n\n"
+        "_“גם מי שמופרע באחת… חוזר עם תובנה שלא ביקש.”_"
+    ),
+    inline=False
+)
+
+UPDATE_MESSAGE_30.add_field(
+    name="📞🐷 John Pork Calls — שיחת פורק",
+    value=(
+        "• מופיע אקראית כל 3 שעות\n"
+        "• הראשון שעונה זוכה ב־70 XP\n"
+        "• כפתור אינטראקטיבי חדש\n"
+        "• הישג חדש: **Friend of Pork**\n\n"
+        "_“מי שעונה לפורק — לעולם אינו לבד.”_"
+    ),
+    inline=False
+)
+
+UPDATE_MESSAGE_30.add_field(
+    name="💼 Mysterious Chest — התיבה המסתורית",
+    value=(
+        "• בחר: פתח בעדינות / בעיטה / בריחה\n"
+        "• תוצאות רנדומליות טובות ורעות\n"
+        "• 4 הישגים חדשים:\n"
+        "   🟣 Blessed by the Chest\n"
+        "   🔴 Cursed by the Chest\n"
+        "   🟡 Reckless Chest Kicker\n"
+        "   ⚪ Cowardly Escape Artist\n\n"
+        "_“הבחירה שלך — הגורל שלך.”_"
+    ),
+    inline=False
+)
+
+UPDATE_MESSAGE_30.add_field(
+    name="⚔️ מפגשים אקראיים בעולם",
+    value=(
+        "העולם של גונוואיי חי: קרבות, תיבות, פורק וחייזרים מתרחשים "
+        "בזמנים אקראיים — וכל גונר חווה מסע שונה."
+    ),
+    inline=False
+)
+UPDATE_MESSAGE_30.add_field(
+    name="🐓⚔️ Beat The Cock — שיפורים ותיקונים",
+    value=(
+        "• תוקן הבאג שגרם לקרבות להופיע רק פעם אחת ביום או לא לצאת בכלל\n"
+        "• כעת נוצרות **4 שעות רנדומליות בכל יום**, מחוץ לשעות 02:00–08:00\n"
+        "• הקרבות יציבים יותר, הסנכרון שופר, והאנימציה רצה חלק\n"
+        "• פקודה חדשה: **!cocktimes** — מציגה את זמני הקרבות של היום\n\n"
+        "_“הקרב תמיד מגיע… רק צריך לדעת מתי.”_"
+    ),
+    inline=False
+)
+
+
+UPDATE_MESSAGE_30.set_footer(text="Master Goonway • גרסה 3.0 • הדרך נפתחת מחדש")
