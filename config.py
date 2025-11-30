@@ -85,6 +85,41 @@ ACHIEVEMENTS = {
         "rarity": "common",
         "chance": 0.0
     },
+    #rewards 
+    "friend_of_pork": {
+        "name": "Friend of Pork",
+        "description": "You answered John Pork’s call. He saved your number. Forever.",
+        "rarity": "uncommon",
+        "chance": 0.0   # awarded manually by event logic
+    },
+    "chest_luck_blessed": {
+        "name": "Blessed by the Chest",
+        "description": "You opened the Mysterious Chest and the loot loved you back.",
+        "rarity": "uncommon",
+        "chance": 0.0
+    },
+
+    "chest_luck_cursed": {
+        "name": "Cursed by the Chest",
+        "description": "The chest punished your curiosity. Painfully.",
+        "rarity": "uncommon",
+        "chance": 0.0
+    },
+
+    "reckless_chest_kicker": {
+        "name": "Reckless Chest Kicker",
+        "description": "You kicked a magical chest for absolutely no reason.",
+        "rarity": "common",
+        "chance": 0.0
+    },
+
+    "cowardly_escape_artist": {
+        "name": "Cowardly Escape Artist",
+        "description": "You ran away from the mysterious chest. Pathetic. But understandable.",
+        "rarity": "common",
+        "chance": 0.0
+    },
+
 
     # Sickness
     "blue_balls": {
@@ -92,6 +127,12 @@ ACHIEVEMENTS = {
         "description": "You were struck by the sickness and forced to rest.",
         "rarity": "rare",
         "chance": 0.0
+    },
+    "abducted_mid_edge": {
+        "name": "Abducted Mid-Edge",
+        "description": "Aliens abducted you mid-stroke. They returned you slightly different.",
+        "rarity": "epic",
+        "chance": 0.0   # triggered manually like Blue Balls
     },
 
     # Random loot-style
@@ -106,6 +147,26 @@ ACHIEVEMENTS = {
         "description": "A surreal dream vision visited you.",
         "rarity": "common",
         "chance": 0.10
+    },
+    "almost_there": {
+        "name": "Almost There",
+        "description": "You got dangerously close… but held back like a champion.",
+        "rarity": "uncommon",
+        "chance": 0.07
+    },
+
+    "sticky_situation": {
+        "name": "Sticky Situation",
+        "description": "Your hands encountered… unexpected resistance.",
+        "rarity": "common",
+        "chance": 0.1
+    },
+
+    "goon_whisper": {
+        "name": "Goon Whisper",
+        "description": "A faint voice from another realm encouraged you forward.",
+        "rarity": "uncommon",
+        "chance": 0.07
     },
     "cum_pee": {
         "name": "Cum Pee",
@@ -125,6 +186,95 @@ ACHIEVEMENTS = {
         "rarity": "epic",
         "chance": 0.02
     },
+    "pink_panther_balls": {
+        "name": "Pink Panther Balls",
+        "description": "You reached a cartoonishly dangerous level of edging pressure.",
+        "rarity": "rare",
+        "chance": 0.06
+    },
+    "jewballs": {
+        "name": "Mystic Jewballs",
+        "description": "You saw old Rabbi in your dream whispering you: Don not spill your seed in vain",
+        "rarity": "epic",
+        "chance": 0.01
+    },
+
+    "milk_overflow": {
+        "name": "Milk Overflow",
+        "description": "Your essence surged beyond containment and overflowed.",
+        "rarity": "epic",
+        "chance": 0.015
+    },
+    "butterfingers": {
+        "name": "Butterfingers",
+        "description": "You fumbled at the worst possible moment. Truly tragic.",
+        "rarity": "common",
+        "chance": 0.15
+    }, 
+    "you_good_bro": {
+        "name": "You Good Bro?",
+        "description": "Even the bot had to stop and check on you.",
+        "rarity": "uncommon",
+        "chance": 0.10
+    },
+    "edge_goblin": {
+        "name": "Edge Goblin",
+        "description": "You lurk in the shadows and edge at inconvenient hours.",
+        "rarity": "rare",
+        "chance": 0.05
+    }, 
+    "professional_overthinker": {
+        "name": "Professional Overthinker",
+        "description": "You stared at it for way too long trying to make a decision.",
+        "rarity": "uncommon",
+        "chance": 0.13
+    }, 
+    "oops_my_bad": {
+        "name": "Oops, My Bad…",
+        "description": "You clicked when you shouldn't have. A classic goon misfire.",
+        "rarity": "uncommon",
+        "chance": 0.12
+    }, 
+    "area_69_survivor": {
+        "name": "Area 69 Survivor",
+        "description": "You saw things no ordinary man should ever edge.",
+        "rarity": "rare",
+        "chance": 0.04
+    }, 
+    "elven_edgecraft": {
+        "name": "Elven Edgecraft",
+        "description": "You mastered a delicate technique whispered among ancient elves.",
+        "rarity": "uncommon",
+        "chance": 0.14
+    }, 
+    "one_handed_hero": {
+        "name": "Prophecy of the One-Handed Hero",
+        "description": "Ancient scrolls foretold your powerful yet confusing technique.",
+        "rarity": "uncommon",
+        "chance": 0.13
+    }, 
+    "wishmasters_curse": {
+        "name": "Wishmaster’s Curse",
+        "description": "You wished for more stamina. The genie misheard you.",
+        "rarity": "rare",
+        "chance": 0.04
+    }, 
+    "dragon_breath": {
+        "name": "Dragon’s Breath Reaction",
+        "description": "A dragon saw your movements and exhaled in disappointment… or admiration.",
+        "rarity": "uncommon",
+        "chance": 0.16
+    }, 
+
+
+
+
+
+    
+
+
+ 
+
 
     # Legendary / mythic / god-tier
     "cosmic_leakage": {
@@ -162,6 +312,13 @@ ACHIEVEMENTS = {
         "description": "A myth whispered by ancient gooners… you touched infinity.",
         "rarity": "god",
         "chance": 0.0001
+    },
+
+    "omega_goon": {
+        "name": "Omega Goon",
+        "description": "You channeled every ounce of cosmic goon energy inside you.",
+        "rarity": "mythic",
+        "chance": 0.002
     },
         "fastest_gooner_west": {
         "name": "Fastest Gooner of the West",

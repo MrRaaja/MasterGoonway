@@ -14,6 +14,8 @@ from scheduler import setup_daily_scheduler
 from update_command import setup_update_command
 
 from cock_fight import setup_cock_fight   # we initialize the system here
+from john_pork import setup_john_pork
+from mysterious_chest import setup_mysterious_chest
 
 
 intents = discord.Intents.default()
@@ -36,7 +38,8 @@ setup_update_command(bot)
 
 # Setup cockfight; this defines auto_cockfight inside it
 setup_cock_fight(bot, data)
-
+setup_john_pork(bot, data)
+setup_mysterious_chest(bot, data)
 
 # ============================
 # Events
@@ -69,6 +72,25 @@ async def on_ready():
         pass
     except Exception as e:
         print("Failed to start auto_cockfight:", e)
+
+    try:    
+        from john_pork import setup_john_pork as jp
+        jp.scheduler.start()
+        print("John Pork scheduler started.")
+    except RuntimeError:
+        # Happens on reload — safe to ignore
+        pass
+    except Exception as e:
+        print("Failed to start John Pork", e)
+    # Start Mysterious Chest scheduler
+    try:
+        from mysterious_chest import setup_mysterious_chest as mc
+        mc.scheduler.start()
+        print("Mysterious Chest scheduler started.")
+    except RuntimeError:
+        pass
+    except Exception as e:
+        print("Failed to start Mysterious Chest scheduler:", e)
 
 
 @bot.event

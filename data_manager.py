@@ -26,7 +26,8 @@ def ensure_user(data, user_id: str):
             "achievements": [],
             "last_goon_time": 0,
             "sick_until": 0,
-            "essence_given": 0
+            "essence_given": 0,
+            "alien_boost": 0
         }
         return
 

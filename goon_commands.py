@@ -50,7 +50,7 @@ def setup_goon_commands(bot: commands.Bot, data: dict):
                 f"⏳ **Cooldown!** Try again in **{mins}m {secs}s**."
             )
 
-        # 3) Sickness mechanic (3% chance)
+        # 3) Blue Balls (3%)
         if random.random() < 0.03:
             sick_time = 3600  # 1 hour
             data[user]["sick_until"] = now + sick_time
@@ -65,35 +65,71 @@ def setup_goon_commands(bot: commands.Bot, data: dict):
                 f"🏅 Achievement unlocked: **Blue Balls**"
             )
 
-        # 4) Bonus based on extra wait time
+        # 3b) Abducted Mid-Edge (0.7%)
+        if random.random() < 0.007:
+            sick_time = 7 * 60
+            data[user]["sick_until"] = now + sick_time
+
+            # 50% alien boost
+            if random.random() < 0.50:
+                alien_xp = random.randint(20, 50)
+                data[user]["alien_boost"] = alien_xp
+                boost_text = (
+                    f"\n🛸 The aliens implanted *advanced technique knowledge* in your brain.\n"
+                    f"Your next goon gets **+{alien_xp} bonus XP**."
+                )
+            else:
+                boost_text = ""
+
+            if "abducted_mid_edge" not in data[user]["achievements"]:
+                data[user]["achievements"].append("abducted_mid_edge")
+
+            save_data(data)
+
+            mins = sick_time // 60
+            secs = sick_time % 60
+
+            return await ctx.send(
+                f"👽 **{ctx.author.name} was ABDUCTED MID-EDGE!**\n"
+                f"The aliens probed your… technique.\n"
+                f"You'll be disoriented for **{mins}m {secs}s**."
+                f"{boost_text}\n"
+                f"🏅 Achievement unlocked: **Abducted Mid-Edge**"
+            )
+
+        # 4) Bonus for waiting extra time
         extra_time = max(0, elapsed - cooldown)
 
         if extra_time <= 0:
             multiplier = 1.0
         else:
-            max_extra = cooldown * 4  # waiting 5x cooldown -> max
+            max_extra = cooldown * 4
             ratio = min(extra_time / max_extra, 1.0)
-            multiplier = 1.0 + 2.0 * ratio  # 1.0 to 3.0
+            multiplier = 1.0 + 2.0 * ratio
 
+        # XP gain
         xp_gain = int(BASE_XP_PER_GOON * multiplier)
+
+        # Alien Technique Boost
+        alien_bonus = data[user].get("alien_boost", 0)
+        if alien_bonus > 0:
+            xp_gain += alien_bonus
+            data[user]["alien_boost"] = 0  # clear
+
         essence_gain = int(BASE_ESSENCE_PER_GOON * multiplier)
 
         # 5) Successful goon
         data[user]["last_goon_time"] = now
         data[user]["sick_until"] = 0
-
         data[user]["xp"] += xp_gain
         xp = data[user]["xp"]
         level = get_level(xp)
 
-        # First goon achievement
         if "first_goon" not in data[user]["achievements"]:
             data[user]["achievements"].append("first_goon")
 
-        # 6) Random achievements with rarities
         unlocked_ids = roll_random_achievements(data, user)
 
-        # 7) Update global jar
         jar = data["_jar"]
         old_total = jar.get("total_ml", 0)
         new_total = old_total + essence_gain
@@ -106,7 +142,7 @@ def setup_goon_commands(bot: commands.Bot, data: dict):
 
         save_data(data)
 
-        # Build response
+        # Build message AFTER xp_gain is final
         cd_msg = (
             f"{cooldown} seconds" if cooldown < 60
             else f"{cooldown//60} minutes"
@@ -121,13 +157,16 @@ def setup_goon_commands(bot: commands.Bot, data: dict):
             f"⏱ Cooldown: **{cd_msg}**"
         )
 
+        if alien_bonus > 0:
+            msg += f"\n🛸 Alien bonus applied: **+{alien_bonus} XP**"
+
         if unlocked_ids:
             msg += "\n\n🎁 **Random Achievements Unlocked!**\n"
             msg += format_achievement_list(unlocked_ids)
 
         await ctx.send(msg)
 
-        # 8) Announce jar milestones
+        # 8) Milestones
         if reached:
             for m in reached:
                 await ctx.send(

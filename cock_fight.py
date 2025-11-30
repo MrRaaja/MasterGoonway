@@ -282,26 +282,56 @@ def setup_cock_fight(bot: commands.Bot, data: dict):
     # ============================================================
     # Automatic 4× per day (every 6 hours)
     # ============================================================
-    @tasks.loop(hours=6)
+    # ============================================================
+    # Automatic daily schedule – 4 battles per day
+    # ============================================================
+    @tasks.loop(time=datetime.time(hour=0, minute=0))
     async def auto_cockfight():
         channel = bot.get_channel(CHANNEL_ID)
         if not channel:
             return
 
-        if cock_state["active"]:
-            return
+        # Pick 4 random times in the day (in minutes from 00:00)
+        # e.g. [87, 312, 790, 1218]
+        moments = sorted(random.randint(0, 24 * 60 - 1) for _ in range(4))
 
-        # Random delay inside the 6h block
-        await asyncio.sleep(random.randint(0, 59) * 60)
-        await asyncio.sleep(random.randint(0, 59))
+        # Format them nicely as HH:MM
+        def fmt(mins: int) -> str:
+            h = mins // 60
+            m = mins % 60
+            return f"{h:02d}:{m:02d}"
 
+        times_str = "\n".join(f"- {fmt(m)}" for m in moments)
+
+        # Announce today’s schedule at 00:00
         await channel.send(
-            "@everyone 🍆 **A Wild Cock Battle Has Appeared!**\n"
-            "Who’s brave enough to smash first?",
-            allowed_mentions=AllowedMentions(everyone=True)
+            "📅 **Today’s Cock Battle Schedule**\n"
+            "Four battles are planned for today:\n"
+            f"{times_str}\n\n"
+            "Stay edgy, gooners.",
         )
 
-        await start_cock_event(channel)
+        # Now wait and spawn battles at those times
+        prev = 0
+        for minute_mark in moments:
+            delay_minutes = minute_mark - prev
+            prev = minute_mark
+
+            # Sleep until this battle time
+            await asyncio.sleep(delay_minutes * 60)
+
+            # Skip if something is already running
+            if cock_state["active"]:
+                continue
+
+            await channel.send(
+                "@everyone 🍆 **A Wild Cock Battle Has Appeared!**\n"
+                "Who’s brave enough to smash first?",
+                allowed_mentions=AllowedMentions(everyone=True)
+            )
+
+            await start_cock_event(channel)
+
 
     # Make auto_cockfight accessible to bot.py
     setup_cock_fight.auto_cockfight = auto_cockfight
