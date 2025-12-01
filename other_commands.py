@@ -8,53 +8,108 @@ from datetime import datetime, timedelta
 from config import ESSENCE_NAME, ACHIEVEMENTS, RARITY_COLORS
 from data_manager import load_quotes
 from cooldowns import get_level
+from discord.ui import View, Button
 
 
 
+
+
+from discord.ui import View, Button
 
 
 def setup_other_commands(bot: commands.Bot, data: dict):
 
     @bot.command()
     async def stats(ctx):
-        """Show your XP, level, and achievements with descriptions."""
+        """Show XP, level, and achievements with pagination."""
         user = str(ctx.author.id)
+
         if user not in data:
             return await ctx.send("You have no stats yet. Use `!goon` first.")
 
         xp = data[user]["xp"]
         level = get_level(xp)
-        ach_ids = data[user]["achievements"]
 
-        if not ach_ids:
-            ach_text = "No achievements yet."
-        else:
-            lines = []
-            for a in ach_ids:
-                info = ACHIEVEMENTS.get(a)
-                if not info:
-                    continue
+        # newest achievements first
+        ach_ids = list(reversed(data[user]["achievements"]))
 
-                icon = RARITY_COLORS.get(info["rarity"], "🏅")
-                name = info["name"]
-                desc = info.get("description", "")
+        # ========== PAGE BUILDING ==========
+        pages = []
+        current = ""
 
-                if desc:
-                    lines.append(f"{icon} **{name}**\n🔸 *{desc}*")
-                else:
-                    lines.append(f"{icon} **{name}**")
+        for ach in ach_ids:
+            info = ACHIEVEMENTS.get(ach)
+            if not info:
+                continue
 
-            ach_text = "\n\n".join(lines)
+            icon = RARITY_COLORS.get(info["rarity"], "🏅")
+            name = info["name"]
+            desc = info.get("description", "")
 
-        embed = discord.Embed(
-            title=f"📜 Journey of {ctx.author.name}",
-            color=discord.Color.blue()
-        )
-        embed.add_field(name="Level", value=level, inline=True)
-        embed.add_field(name="XP", value=str(xp), inline=True)
-        embed.add_field(name="Achievements", value=ach_text, inline=False)
+            block = f"{icon} **{name}**\n🔸 *{desc}*\n\n"
 
-        await ctx.send(embed=embed)
+            if len(current) + len(block) > 900:
+                pages.append(current)
+                current = block
+            else:
+                current += block
+
+        if current:
+            pages.append(current)
+
+        if not pages:
+            pages = ["No achievements yet."]
+
+        total_pages = len(pages)
+
+        # ========== EMBED BUILDER ==========
+        def make_embed(index):
+            embed = discord.Embed(
+                title=f"📜 Journey of {ctx.author.display_name}",
+                color=discord.Color.blue()
+            )
+            embed.add_field(name="Level", value=level, inline=True)
+            embed.add_field(name="XP", value=str(xp), inline=True)
+            embed.add_field(
+                name=f"Achievements (Page {index+1}/{total_pages})",
+                value=pages[index],
+                inline=False
+            )
+            return embed
+
+        # ========== BUTTON VIEW ==========
+        class StatsView(View):
+            def __init__(self):
+                super().__init__(timeout=120)
+                self.index = 0  # current page
+
+            async def update(self, interaction):
+                await interaction.response.edit_message(
+                    embed=make_embed(self.index),
+                    view=self
+                )
+
+            @discord.ui.button(label="⬅️ Prev", style=discord.ButtonStyle.secondary)
+            async def prev_btn(self, interaction: discord.Interaction, button: Button):
+                if interaction.user.id != ctx.author.id:
+                    return await interaction.response.send_message(
+                        "Not your stats.", ephemeral=True
+                    )
+                self.index = (self.index - 1) % total_pages
+                await self.update(interaction)
+
+            @discord.ui.button(label="Next ➡️", style=discord.ButtonStyle.primary)
+            async def next_btn(self, interaction: discord.Interaction, button: Button):
+                if interaction.user.id != ctx.author.id:
+                    return await interaction.response.send_message(
+                        "Not your stats.", ephemeral=True
+                    )
+                self.index = (self.index + 1) % total_pages
+                await self.update(interaction)
+
+        view = StatsView()
+        await ctx.send(embed=make_embed(0), view=view)
+
 
     @bot.command()
     async def jar(ctx):
@@ -157,7 +212,7 @@ def setup_other_commands(bot: commands.Bot, data: dict):
             "`!quote` — Random goon quote\n"
             "`!nextquote` — Time until next daily quote\n"
             "`!helpme` — This help message\n"
-            "`!cocktime` — Show all cock fight times"
+            "`!cocktimes` — Show all cock fight times\n"
         )
         await ctx.send(msg)
 

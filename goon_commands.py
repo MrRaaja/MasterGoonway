@@ -3,7 +3,7 @@
 from datetime import datetime
 import random
 from discord.ext import commands
-
+import discord
 from config import (
     ESSENCE_NAME,
     BASE_ESSENCE_PER_GOON,
